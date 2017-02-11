@@ -1,14 +1,65 @@
+const keyNameToKeyCodeMap = {
+  'upArrow': 38,
+  'downArrow': 40,
+  'rightArrow': 39,
+  'leftArrow': 37,
+  'k': 75,
+  'j': 74,
+  'l': 76,
+  'h': 72,
+  'w': 87,
+  's': 83,
+  'a': 65,
+  'd': 68
+}
+
+const keyFunctionToKeyNameMap = {
+  up: ['upArrow', 'w', 'k'],
+  down: ['downArrow', 's', 'j'],
+  right: ['rightArrow', 'd', 'l'],
+  left: ['leftArrow', 'a', 'h']
+}
+
+function isDownKeyWithFunction(keysDown, fnName) {
+  return keyFunctionToKeyNameMap[fnName].some(keyName => {
+    const keyCode = keyNameToKeyCodeMap[keyName]
+    return !!keysDown[keyCode]
+  })
+}
+
+function addKeyListeners(gameState) {
+  const { keysDown } = gameState
+  window.addEventListener('keydown', e => keysDown[e.keyCode] = true)
+  window.addEventListener('keyup', e => delete keysDown[e.keyCode])
+}
+
+
 init()
 
 function init() {
   const requestAnimationFrame = getRequestAnimationFrame()
+
   const canvas = createCanvas()
   const ctx = canvas.getContext('2d');
+
   const images = loadImages([
     { name: 'background', src: 'imgs/background.png' },
     { name: 'hero', src: 'imgs/hero.png' },
     { name: 'monster', src: 'imgs/monster.png' },
   ])
+
+  const background = {
+    x: 0,
+    y: 0,
+    image: 'background'
+  }
+
+  const player = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    speed: 256,
+    image: 'hero'
+  }
 
   const gameState = {
     canvas,
@@ -16,12 +67,8 @@ function init() {
     images,
     keysDown: {},
     score: 0,
-    hero: {
-      speed: 256,
-      x: canvas.width / 2,
-      y: canvas.height / 2
-    },
-    monster: {},
+    background,
+    player
   }
 
   addKeyListeners(gameState)
@@ -30,8 +77,9 @@ function init() {
   const loop = () => {
     const now = Date.now()
     const delta = now - then
+    const modifier = delta / 1000
 
-    update(delta / 1000, gameState)
+    update(modifier, gameState)
     render(gameState)
 
     then = now
@@ -76,41 +124,39 @@ function loadImage(name, src) {
   return imgObj
 }
 
-function addKeyListeners(gameState) {
-  const { keysDown } = gameState
-  window.addEventListener('keydown', e => keysDown[e.keyCode] = true)
-  window.addEventListener('keyup', e => delete keysDown[e.keyCode])
-}
 
 function update(modifier, gameState) {
-  const { hero, keysDown } = gameState
+  updatePlayerPosition(modifier, gameState)
+}
 
-  if (keysDown[38]) {
-    hero.y -= hero.speed * modifier
+function updatePlayerPosition(modifier, gameState) {
+  const { keysDown, player } = gameState
+  const diff = player.speed * modifier
+
+  if (isDownKeyWithFunction(keysDown, 'up')) {
+    player.y -= diff
   }
-  if (keysDown[40]) {
-    hero.y += hero.speed * modifier
+  if (isDownKeyWithFunction(keysDown, 'down')) {
+    player.y += diff
   }
-  if (keysDown[37]) {
-    hero.x -= hero.speed * modifier
+  if (isDownKeyWithFunction(keysDown, 'left')) {
+    player.x -= diff
   }
-  if (keysDown[39]) {
-    hero.x += hero.speed * modifier
+  if (isDownKeyWithFunction(keysDown, 'right')) {
+    player.x += diff
   }
 }
+
 
 function render(gameState) {
-  const {
-    canvas,
-    ctx,
-    images,
-    hero
-  } = gameState
-
-  const bgImg = images['background']
-  bgImg.isReady && ctx.drawImage(bgImg.el, 0, 0);
-
-  const heroImg = images['hero']
-  heroImg.isReady && ctx.drawImage(heroImg.el, hero.x, hero.y);
+  const { background, player } = gameState
+  renderGameObj(gameState, background)
+  renderGameObj(gameState, player)
 }
 
+function renderGameObj(gameState, gameObj) {
+  const { ctx, images } = gameState
+  const { x, y, image } = gameObj
+  const imgObj = images[image]
+  imgObj.isReady && ctx.drawImage(imgObj.el, x, y);
+}
