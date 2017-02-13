@@ -1,7 +1,13 @@
 (function() {
 
   const game = window.game || (window.game = {})
-  const { isDownKeyWithFunction, addKeyListeners } = game.keys
+
+  const {
+    isDownKeyWithFunction,
+    addKeyListeners
+  } = game.keys
+
+  const { loadImages } = game.images
 
   init()
 
@@ -74,25 +80,6 @@
     document.body.appendChild(canvas);
     return canvas
   }
-
-  function loadImages(imgList) {
-    return imgList.reduce((acc, { name, src }) => {
-      acc[name] = loadImage(name, src)
-      return acc
-    }, {})
-  }
-
-  function loadImage(name, src) {
-    const imgObj = {
-      name,
-      isReady: false,
-      el: new Image()
-    }
-    imgObj.el.onload = () => imgObj.isReady = true
-    imgObj.el.src = src
-    return imgObj
-  }
-
 
   function update(modifier, gameState) {
     updatePlayerPosition(modifier, gameState)
