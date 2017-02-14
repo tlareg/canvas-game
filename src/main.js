@@ -3,11 +3,19 @@
   const game = window.game || (window.game = {})
 
   const {
+    getRequestAnimationFrame,
+    createCanvas
+  } = game.utils
+
+  const {
     isDownKeyWithFunction,
     addKeyListeners
   } = game.keys
 
-  const { loadImages } = game.images
+  const {
+    loadImages
+  } = game.images
+
 
   init()
 
@@ -64,23 +72,6 @@
     loop()
   }
 
-  function getRequestAnimationFrame() {
-    return (
-      window.requestAnimationFrame ||
-      window.webkitRequestAnimationFrame ||
-      window.msRequestAnimationFrame ||
-      window.mozRequestAnimationFrame
-    )
-  }
-
-  function createCanvas() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 600;
-    document.body.appendChild(canvas);
-    return canvas
-  }
-
   function update(modifier, gameState) {
     updatePlayerPosition(modifier, gameState)
   }
@@ -102,7 +93,6 @@
       player.x += diff
     }
   }
-
 
   function render(gameState) {
     const { background, player } = gameState
