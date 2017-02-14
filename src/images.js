@@ -1,10 +1,5 @@
 (function() {
 
-  const game = window.game || (window.game = {})
-  game.images = {
-    loadImages
-  }
-
   function loadImages(imgList) {
     return imgList.reduce((acc, { name, src }) => {
       acc[name] = loadImage(name, src)
@@ -22,5 +17,14 @@
     imgObj.el.src = src
     return imgObj
   }
+
+  const images = loadImages([
+    { name: 'background', src: 'imgs/background.png' },
+    { name: 'hero', src: 'imgs/hero.png' },
+    { name: 'enemy', src: 'imgs/enemy.png' },
+  ])
+
+  const game = window.game || (window.game = {})
+  game.images = images
 
 })()

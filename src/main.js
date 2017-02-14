@@ -1,6 +1,6 @@
 (function() {
 
-  const game = window.game || (window.game = {})
+  const game = window.game
 
   const {
     getRequestAnimationFrame,
@@ -12,24 +12,15 @@
     addKeyListeners
   } = game.keys
 
-  const {
-    loadImages
-  } = game.images
+  const { images } = game
 
 
   init()
 
   function init() {
     const requestAnimationFrame = getRequestAnimationFrame()
-
     const canvas = createCanvas()
     const ctx = canvas.getContext('2d');
-
-    const images = loadImages([
-      { name: 'background', src: 'imgs/background.png' },
-      { name: 'hero', src: 'imgs/hero.png' },
-      { name: 'enemy', src: 'imgs/enemy.png' },
-    ])
 
     const background = {
       x: 0,
@@ -44,14 +35,29 @@
       image: 'hero'
     }
 
+    const enemies = [
+      {
+        x: 200,
+        y: 0,
+        speed: 100,
+        image: 'enemy'
+      },
+      {
+        x: 600,
+        y: 0,
+        speed: 150,
+        image: 'enemy'
+      }
+    ]
+
     const gameState = {
       canvas,
       ctx,
-      images,
       keysDown: {},
       score: 0,
       background,
-      player
+      player,
+      enemies
     }
 
     addKeyListeners(gameState)
@@ -74,34 +80,42 @@
 
   function update(modifier, gameState) {
     updatePlayerPosition(modifier, gameState)
+    updateEnemyPositions(modifier, gameState)
   }
 
   function updatePlayerPosition(modifier, gameState) {
     const { keysDown, player } = gameState
     const diff = player.speed * modifier
 
-    if (isDownKeyWithFunction(keysDown, 'up')) {
-      player.y -= diff
-    }
-    if (isDownKeyWithFunction(keysDown, 'down')) {
-      player.y += diff
-    }
-    if (isDownKeyWithFunction(keysDown, 'left')) {
-      player.x -= diff
-    }
-    if (isDownKeyWithFunction(keysDown, 'right')) {
-      player.x += diff
-    }
+    if (isDownKeyWithFunction(keysDown, 'up')) player.y -= diff;
+    if (isDownKeyWithFunction(keysDown, 'down')) player.y += diff;
+    if (isDownKeyWithFunction(keysDown, 'left')) player.x -= diff;
+    if (isDownKeyWithFunction(keysDown, 'right')) player.x += diff;
+  }
+
+  function updateEnemyPositions(modifier, gameState) {
+    const { enemies, canvas } = gameState
+    enemies.forEach(e => {
+      const diff = e.speed * modifier
+      e.y += diff
+    })
+    gameState.enemies = enemies.filter(e => e.y < canvas.height)
   }
 
   function render(gameState) {
-    const { background, player } = gameState
+    const {
+      background,
+      player,
+      enemies
+    } = gameState
+
     renderGameObj(gameState, background)
     renderGameObj(gameState, player)
+    enemies.forEach(enemy => renderGameObj(gameState, enemy))
   }
 
   function renderGameObj(gameState, gameObj) {
-    const { ctx, images } = gameState
+    const { ctx } = gameState
     const { x, y, image } = gameObj
     const imgObj = images[image]
     imgObj.isReady && ctx.drawImage(imgObj.el, x, y);
