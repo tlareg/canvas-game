@@ -4,7 +4,9 @@
 
   const {
     getRequestAnimationFrame,
-    createCanvas
+    createCanvas,
+    getRandomInt,
+    rectsCollide
   } = game.utils
 
   const {
@@ -28,36 +30,15 @@
       image: 'background'
     }
 
-    const player = {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      speed: 256,
-      image: 'hero'
-    }
-
-    const enemies = [
-      {
-        x: 200,
-        y: 0,
-        speed: 100,
-        image: 'enemy'
-      },
-      {
-        x: 600,
-        y: 0,
-        speed: 150,
-        image: 'enemy'
-      }
-    ]
-
     const gameState = {
       canvas,
       ctx,
       keysDown: {},
+      end: false,
       score: 0,
       background,
-      player,
-      enemies
+      player: createPlayer({ canvas }),
+      enemies: []
     }
 
     addKeyListeners(gameState)
@@ -71,6 +52,10 @@
       update(modifier, gameState)
       render(gameState)
 
+      if (gameState.end) {
+        return
+      }
+
       then = now
       requestAnimationFrame(loop)
     }
@@ -79,8 +64,43 @@
   }
 
   function update(modifier, gameState) {
+    createEnemies(gameState)
     updatePlayerPosition(modifier, gameState)
     updateEnemyPositions(modifier, gameState)
+    checkCollisions(gameState)
+  }
+
+  function createPlayer({ canvas }) {
+    return {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      width: 32,
+      height: 32,
+      speed: 256,
+      image: 'hero'
+    }
+  }
+
+  function createEnemies(gameState) {
+    const {
+      canvas,
+      enemies
+    } = gameState
+
+    while(enemies.length < 25) {
+      enemies.push(createEnemy({ canvas }))
+    }
+  }
+
+  function createEnemy({ canvas }) {
+    return {
+      x: getRandomInt(0, canvas.width),
+      y: 0,
+      width: 32,
+      height: 32,
+      speed: getRandomInt(150, 250),
+      image: 'enemy'
+    }
   }
 
   function updatePlayerPosition(modifier, gameState) {
@@ -98,8 +118,28 @@
     enemies.forEach(e => {
       const diff = e.speed * modifier
       e.y += diff
+      e.x += getRandomInt(-diff, diff)
     })
-    gameState.enemies = enemies.filter(e => e.y < canvas.height)
+    gameState.enemies = enemies.filter(enemy => isGameObjOnMap(canvas, enemy))
+  }
+
+  function isGameObjOnMap({ width: mapWidth, height: mapHeight }, { x, y }) {
+    return (
+      y < mapHeight &&
+      x < mapWidth &&
+      y > 0 &&
+      x > 0
+    )
+  }
+
+  function checkCollisions(gameState) {
+    const { player, enemies } = gameState
+
+    for (let i = 0; i < enemies.length; i++) {
+      if (rectsCollide(player, enemies[i])) {
+        gameState.end = true
+      }
+    }
   }
 
   function render(gameState) {
@@ -112,6 +152,10 @@
     renderGameObj(gameState, background)
     renderGameObj(gameState, player)
     enemies.forEach(enemy => renderGameObj(gameState, enemy))
+
+    if (gameState.end) {
+      renderGameOver(gameState)
+    }
   }
 
   function renderGameObj(gameState, gameObj) {
@@ -119,6 +163,15 @@
     const { x, y, image } = gameObj
     const imgObj = images[image]
     imgObj.isReady && ctx.drawImage(imgObj.el, x, y);
+  }
+
+  function renderGameOver(gameState) {
+    const { ctx } = gameState
+    ctx.fillStyle = 'rgb(250, 0, 0)';
+	  ctx.font = '100px Helvetica';
+	  ctx.textAlign = 'left';
+	  ctx.textBaseline = 'top';
+	  ctx.fillText('GAME OVER', 100, 100);
   }
 
 })()
