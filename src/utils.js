@@ -11,9 +11,9 @@
   function getRequestAnimationFrame() {
     return (
       window.requestAnimationFrame ||
-        window.webkitRequestAnimationFrame ||
-        window.msRequestAnimationFrame ||
-        window.mozRequestAnimationFrame
+      window.webkitRequestAnimationFrame ||
+      window.msRequestAnimationFrame ||
+      window.mozRequestAnimationFrame
     )
   }
 
@@ -21,7 +21,6 @@
     const canvas = document.createElement('canvas');
     canvas.width = 800;
     canvas.height = 600;
-    document.body.appendChild(canvas);
     return canvas
   }
 

@@ -1,6 +1,7 @@
 (function() {
 
   const keyNameToKeyCodeMap = {
+    'n': 78,
     'upArrow': 38,
     'downArrow': 40,
     'rightArrow': 39,
@@ -38,7 +39,8 @@
   const game = window.game || (window.game = {})
   game.keys = {
     isDownKeyWithFunction,
-    addKeyListeners
+    addKeyListeners,
+    keyNameToKeyCodeMap
   }
 
 })()

@@ -11,37 +11,50 @@
 
   const {
     isDownKeyWithFunction,
-    addKeyListeners
+    addKeyListeners,
+    keyNameToKeyCodeMap
   } = game.keys
 
   const { images } = game
 
+  const requestAnimationFrame = getRequestAnimationFrame()
 
-  init()
+  const canvas = createCanvas()
+  document.querySelector('.canvas-container').appendChild(canvas)
 
-  function init() {
-    const requestAnimationFrame = getRequestAnimationFrame()
-    const canvas = createCanvas()
-    const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d');
 
-    const background = {
-      x: 0,
-      y: 0,
-      image: 'background'
+  const gameState = {
+    canvas,
+    ctx,
+    background: createBackground(),
+    keysDown: {}
+  }
+
+  addKeyListeners(gameState)
+
+  document.querySelector('.main-menu__new-game')
+    .addEventListener('click', () => newGame(gameState))
+
+  window.addEventListener('keydown', e => {
+    if (e.keyCode === keyNameToKeyCodeMap.n ) {
+      newGame(gameState)
     }
+  })
 
-    const gameState = {
-      canvas,
-      ctx,
-      keysDown: {},
+
+  function newGame(gameState) {
+    document.querySelector('.canvas-container').style.display = 'block'
+
+    Object.assign(gameState, {
       end: false,
       score: 0,
-      background,
-      player: createPlayer({ canvas }),
+      player: createPlayer(gameState),
       enemies: []
-    }
+    })
 
-    addKeyListeners(gameState)
+    Object.keys(gameState.keysDown)
+      .forEach(prop => gameState.keysDown[prop] = false)
 
     let then = Date.now()
     const loop = () => {
@@ -63,14 +76,12 @@
     loop()
   }
 
-  function update(modifier, gameState) {
-    createEnemies(gameState)
-    updatePlayerPosition(modifier, gameState)
-    updateEnemyPositions(modifier, gameState)
-    checkCollisions(gameState)
+  function createBackground() {
+    return { x: 0, y: 0, image: 'background' }
   }
 
-  function createPlayer({ canvas }) {
+  function createPlayer(gameState) {
+    const { canvas } = gameState
     return {
       x: canvas.width / 2,
       y: canvas.height / 2,
@@ -103,6 +114,13 @@
     }
   }
 
+  function update(modifier, gameState) {
+    createEnemies(gameState)
+    updatePlayerPosition(modifier, gameState)
+    updateEnemyPositions(modifier, gameState)
+    checkCollisions(gameState)
+  }
+
   function updatePlayerPosition(modifier, gameState) {
     const { keysDown, player } = gameState
     const diff = player.speed * modifier
@@ -115,15 +133,20 @@
 
   function updateEnemyPositions(modifier, gameState) {
     const { enemies, canvas } = gameState
+
     enemies.forEach(e => {
       const diff = e.speed * modifier
       e.y += diff
       e.x += getRandomInt(-diff, diff)
     })
+
     gameState.enemies = enemies.filter(enemy => isGameObjOnMap(canvas, enemy))
   }
 
-  function isGameObjOnMap({ width: mapWidth, height: mapHeight }, { x, y }) {
+  function isGameObjOnMap(
+    { width: mapWidth, height: mapHeight },
+    { x, y }
+  ) {
     return (
       y < mapHeight &&
       x < mapWidth &&
@@ -138,6 +161,7 @@
     for (let i = 0; i < enemies.length; i++) {
       if (rectsCollide(player, enemies[i])) {
         gameState.end = true
+        break
       }
     }
   }
@@ -167,11 +191,11 @@
 
   function renderGameOver(gameState) {
     const { ctx } = gameState
-    ctx.fillStyle = 'rgb(250, 0, 0)';
+    ctx.fillStyle = 'rgb(255, 150, 46)';
 	  ctx.font = '100px Helvetica';
 	  ctx.textAlign = 'left';
 	  ctx.textBaseline = 'top';
-	  ctx.fillText('GAME OVER', 100, 100);
+	  ctx.fillText('GAME OVER', 100, 20);
   }
 
 })()
