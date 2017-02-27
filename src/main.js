@@ -37,7 +37,7 @@
     .addEventListener('click', () => newGame(gameState))
 
   window.addEventListener('keydown', e => {
-    if (e.keyCode === keyNameToKeyCodeMap.n ) {
+    if (e.keyCode === keyNameToKeyCodeMap.n) {
       newGame(gameState)
     }
   })
