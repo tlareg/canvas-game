@@ -48,9 +48,11 @@
 
     Object.assign(gameState, {
       end: false,
+      modifier: 1,
       score: 0,
       player: createPlayer(gameState),
-      enemies: []
+      enemies: [],
+      bullets: []
     })
 
     Object.keys(gameState.keysDown)
@@ -60,9 +62,9 @@
     const loop = () => {
       const now = Date.now()
       const delta = now - then
-      const modifier = delta / 1000
+      gameState.modifier = delta / 1000
 
-      update(modifier, gameState)
+      update(gameState)
       render(gameState)
 
       if (gameState.end) {
@@ -87,8 +89,21 @@
       y: canvas.height / 2,
       width: 32,
       height: 32,
-      speed: 256,
-      image: 'hero'
+      speed: 400,
+      image: 'hero',
+      shootRate: 40, // time between bullets in ms
+      lastShootTime: 0
+    }
+  }
+
+  function createBullet({ x, y }) {
+    return {
+      x,
+      y,
+      width: 10,
+      height: 10,
+      speed: 1000,
+      image: 'bullet'
     }
   }
 
@@ -98,7 +113,7 @@
       enemies
     } = gameState
 
-    while(enemies.length < 25) {
+    while(enemies.length < 100) {
       enemies.push(createEnemy({ canvas }))
     }
   }
@@ -109,20 +124,20 @@
       y: 0,
       width: 32,
       height: 32,
-      speed: getRandomInt(150, 250),
+      speed: getRandomInt(80, 200),
       image: 'enemy'
     }
   }
 
-  function update(modifier, gameState) {
-    createEnemies(gameState)
-    updatePlayerPosition(modifier, gameState)
-    updateEnemyPositions(modifier, gameState)
+  function update(gameState) {
+    updatePlayer(gameState)
+    updateBullets(gameState)
+    updateEnemies(gameState)
     checkCollisions(gameState)
   }
 
-  function updatePlayerPosition(modifier, gameState) {
-    const { keysDown, player } = gameState
+  function updatePlayer(gameState) {
+    const { keysDown, player, modifier } = gameState
     const diff = player.speed * modifier
 
     if (isDownKeyWithFunction(keysDown, 'up')) player.y -= diff;
@@ -131,8 +146,10 @@
     if (isDownKeyWithFunction(keysDown, 'right')) player.x += diff;
   }
 
-  function updateEnemyPositions(modifier, gameState) {
-    const { enemies, canvas } = gameState
+  function updateEnemies(gameState) {
+    const { modifier, enemies, canvas } = gameState
+
+    createEnemies(gameState)
 
     enemies.forEach(e => {
       const diff = e.speed * modifier
@@ -141,6 +158,30 @@
     })
 
     gameState.enemies = enemies.filter(enemy => isGameObjOnMap(canvas, enemy))
+  }
+
+  function updateBullets(gameState) {
+    const { modifier, keysDown, player, bullets, canvas } = gameState
+
+    bullets.forEach(bullet => {
+      const diff = bullet.speed * modifier
+      bullet.y -= diff
+    })
+
+    const canFire = () => {
+      if (!player.lastShootTime) return true
+      return (Date.now() - player.lastShootTime) >= player.shootRate
+    }
+
+    if (isDownKeyWithFunction(keysDown, 'fire') && canFire()) {
+      player.lastShootTime = Date.now()
+      bullets.push(createBullet({
+        x: player.x,
+        y: player.y
+      }))
+    }
+
+    gameState.bullets = bullets.filter(bullet => isGameObjOnMap(canvas, bullet))
   }
 
   function isGameObjOnMap(
@@ -156,25 +197,44 @@
   }
 
   function checkCollisions(gameState) {
-    const { player, enemies } = gameState
+    const { player, bullets, enemies } = gameState
 
     for (let i = 0; i < enemies.length; i++) {
-      if (rectsCollide(player, enemies[i])) {
+      const enemy = enemies[i]
+
+      for (let j = 0; j < bullets.length; j++) {
+        const bullet = bullets[j]
+
+        if (rectsCollide(enemy, bullet)) {
+          enemy.toRemove = true
+          bullet.toRemove = true
+          break
+        }
+      }
+
+      if (enemy.toRemove) break
+
+      if (rectsCollide(player, enemy)) {
         gameState.end = true
         break
       }
     }
+
+    gameState.enemies = enemies.filter(enemy => !enemy.toRemove)
+    gameState.bullets = bullets.filter(bullet => !bullet.toRemove)
   }
 
   function render(gameState) {
     const {
       background,
       player,
+      bullets,
       enemies
     } = gameState
 
     renderGameObj(gameState, background)
     renderGameObj(gameState, player)
+    bullets.forEach(bullet => renderGameObj(gameState, bullet))
     enemies.forEach(enemy => renderGameObj(gameState, enemy))
 
     if (gameState.end) {

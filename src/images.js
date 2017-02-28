@@ -22,6 +22,7 @@
     { name: 'background', src: 'imgs/background.png' },
     { name: 'hero', src: 'imgs/hero.png' },
     { name: 'enemy', src: 'imgs/enemy.png' },
+    { name: 'bullet', src: 'imgs/bullet.png' }
   ])
 
   const game = window.game || (window.game = {})

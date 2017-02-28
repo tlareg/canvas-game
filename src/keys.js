@@ -13,14 +13,17 @@
     'w': 87,
     's': 83,
     'a': 65,
-    'd': 68
+    'd': 68,
+    'space': 32,
+    'f': 70
   }
 
   const keyFunctionToKeyNameMap = {
     up: ['upArrow', 'w', 'k'],
     down: ['downArrow', 's', 'j'],
     right: ['rightArrow', 'd', 'l'],
-    left: ['leftArrow', 'a', 'h']
+    left: ['leftArrow', 'a', 'h'],
+    fire: ['space', 'f']
   }
 
   function isDownKeyWithFunction(keysDown, fnName) {
