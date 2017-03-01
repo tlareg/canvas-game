@@ -44,19 +44,8 @@
 
 
   function newGame(gameState) {
-    document.querySelector('.canvas-container').style.display = 'block'
-
-    Object.assign(gameState, {
-      end: false,
-      modifier: 1,
-      score: 0,
-      player: createPlayer(gameState),
-      enemies: [],
-      bullets: []
-    })
-
-    Object.keys(gameState.keysDown)
-      .forEach(prop => gameState.keysDown[prop] = false)
+    showCanvasContainer()
+    resetGameState(gameState)
 
     let then = Date.now()
     const loop = () => {
@@ -78,6 +67,24 @@
     loop()
   }
 
+  function showCanvasContainer() {
+    document.querySelector('.canvas-container').style.display = 'block'
+  }
+
+  function resetGameState(gameState) {
+    Object.assign(gameState, {
+      end: false,
+      modifier: 1,
+      score: 0,
+      player: createPlayer(gameState),
+      enemies: [],
+      bullets: []
+    })
+
+    Object.keys(gameState.keysDown)
+      .forEach(prop => gameState.keysDown[prop] = false)
+  }
+
   function createBackground() {
     return { x: 0, y: 0, image: 'background' }
   }
@@ -89,9 +96,9 @@
       y: canvas.height / 2,
       width: 32,
       height: 32,
-      speed: 400,
+      speed: 300,
       image: 'hero',
-      shootRate: 40, // time between bullets in ms
+      shootRate: 80, // time between bullets in ms
       lastShootTime: 0
     }
   }
@@ -102,7 +109,7 @@
       y,
       width: 10,
       height: 10,
-      speed: 1000,
+      speed: 600,
       image: 'bullet'
     }
   }
@@ -113,7 +120,7 @@
       enemies
     } = gameState
 
-    while(enemies.length < 100) {
+    while(enemies.length < 50) {
       enemies.push(createEnemy({ canvas }))
     }
   }
@@ -137,13 +144,34 @@
   }
 
   function updatePlayer(gameState) {
-    const { keysDown, player, modifier } = gameState
+    const { keysDown, player, modifier, canvas } = gameState
     const diff = player.speed * modifier
+    const dirs = ['up', 'down', 'left', 'right']
 
-    if (isDownKeyWithFunction(keysDown, 'up')) player.y -= diff;
-    if (isDownKeyWithFunction(keysDown, 'down')) player.y += diff;
-    if (isDownKeyWithFunction(keysDown, 'left')) player.x -= diff;
-    if (isDownKeyWithFunction(keysDown, 'right')) player.x += diff;
+    dirs.forEach(dir => {
+      if (!isDownKeyWithFunction(keysDown, dir)) return;
+
+      const { x: newX, y: newY } = computeNewCoords(dir, diff, player)
+
+      const areValidNewCoords = isGameObjOnMap(canvas, {
+        width: player.width,
+        height: player.height,
+        x: newX,
+        y: newY
+      })
+
+      if (areValidNewCoords) {
+        player.y = newY
+        player.x = newX
+      }
+    })
+  }
+
+  function computeNewCoords(dir, diff, { x, y }) {
+    if (dir === 'up')  return { x, y: y - diff }
+    if (dir === 'down')  return { x, y: y + diff }
+    if (dir === 'left')  return { x: x - diff, y }
+    if (dir === 'right')  return { x: x + diff, y }
   }
 
   function updateEnemies(gameState) {
@@ -186,11 +214,11 @@
 
   function isGameObjOnMap(
     { width: mapWidth, height: mapHeight },
-    { x, y }
+    { x, y, width, height }
   ) {
     return (
-      y < mapHeight &&
-      x < mapWidth &&
+      y + height < mapHeight &&
+      x + width < mapWidth &&
       y > 0 &&
       x > 0
     )
@@ -251,11 +279,11 @@
 
   function renderGameOver(gameState) {
     const { ctx } = gameState
-    ctx.fillStyle = 'rgb(255, 150, 46)';
-	  ctx.font = '100px Helvetica';
-	  ctx.textAlign = 'left';
-	  ctx.textBaseline = 'top';
-	  ctx.fillText('GAME OVER', 100, 20);
+    ctx.fillStyle = 'rgb(255, 150, 46)'
+	  ctx.font = '100px Helvetica'
+	  ctx.textAlign = 'left'
+	  ctx.textBaseline = 'top'
+	  ctx.fillText('GAME OVER', 100, 20)
   }
 
 })()
