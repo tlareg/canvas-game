@@ -236,6 +236,7 @@
         if (rectsCollide(enemy, bullet)) {
           enemy.toRemove = true
           bullet.toRemove = true
+          gameState.score += 1
           break
         }
       }
@@ -265,6 +266,8 @@
     bullets.forEach(bullet => renderGameObj(gameState, bullet))
     enemies.forEach(enemy => renderGameObj(gameState, enemy))
 
+    renderInfo(gameState)
+
     if (gameState.end) {
       renderGameOver(gameState)
     }
@@ -275,6 +278,15 @@
     const { x, y, image } = gameObj
     const imgObj = images[image]
     imgObj.isReady && ctx.drawImage(imgObj.el, x, y);
+  }
+
+  function renderInfo(gameState) {
+    const { ctx, score } = gameState
+    ctx.fillStyle = 'rgb(0, 0, 0)'
+	  ctx.font = '24px Helvetica'
+	  ctx.textAlign = 'left'
+	  ctx.textBaseline = 'top'
+	  ctx.fillText(`SCORE: ${score}`, 10, 10)
   }
 
   function renderGameOver(gameState) {
