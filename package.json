@@ -9,6 +9,6 @@
     "url": "https://github.com/tlareg/canvas-game.git"
   },
   "scripts": {
-    "start": "npx http-server ./docs"
+    "start": "npx http-server ./src"
   }
 }
